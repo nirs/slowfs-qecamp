@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+
+    <title>slowfs</title>
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <link rel="stylesheet" href="reveal/css/reveal.css">
+    <link rel="stylesheet" href="reveal/css/theme/beige.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="reveal/lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? 'reveal/css/print/pdf.css' : 'reveal/css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+
+    <style>
+      .reveal .slides h1 {letter-spacing: 0.2em;}
+      .reveal .slide spre { width: 100% }
+      .reveal .slides ul.items { list-style: none; text-align: center; }
+    </style>
+
+    <!--[if lt IE 9]>
+    <script src="lib/js/html5shiv.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <div class="reveal">
+
+      <div class="slides">
+
+        <section>
+          <h1>slowfs</h1>
+          <p>Slowing down storage for fun and profit</p>
+          <ul class="items" style="font-size: 0.7em">
+            <li>
+              <a href="https://github.com/nirs">Nir Soffer</a> <a href="mailto:nsoffer@redhat.com">&lt;nsoffer@redhat.com&gt;</a>
+            </li>
+            <li>
+              QE Camp TLV 2017
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <pre style="font-size: 0.8em"><code class="hljs nohighlight" data-trim>
+$ whoami
+Working on RHV storage since 2013
+Tinkering with Python since 2003
+Free software enthusiast
+Father of two
+          </code></pre>
+        </section>
+
+        <section>
+
+          <section>
+            <h2>Agenda</h2>
+            <ul class="items">
+              <li>Why slowfs?</li>
+              <li>FUSE</li>
+              <li>Quick tutorial</li>
+              <li>Demo time</li>
+              <li>Future work</li>
+              <li>Questions</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>The real agenda</h3>
+            <ul class="items">
+              <li>/me getting a T-Shirt</li>
+              <li>You contribute to slowfs!</li>
+            </ul>
+          </section>
+
+        </section>
+
+        <section>
+
+          <section>
+            <h2>Why slowfs?</h2>
+          </section>
+
+          <section>
+            <h3>Bug 1270220</h3>
+            <ul class="items">
+              <li>SPM in problem</li>
+              <li>Data center down</li>
+              <li>Manual cleanup required</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Digging...</h3>
+            <ul class="items">
+              <li>unlink() takes 90 seconds!</li>
+              <li>Lots of deletes</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Steps to reproduce</h3>
+            <ul class="items">
+              <li>Setup overloaded NetApp filer</li>
+              <li>Create huge images</li>
+              <li>Setup 30 hosts</li>
+              <li>Delete one VM per minute</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Vote!</h3>
+            <ol class="items">
+              <li class="fragment">Close WONTFIX, fix your storage</li>
+              <li class="fragment">Dig deeper?</li>
+            </ol>
+          </section>
+
+          <section>
+            <h3>Digging more...</h3>
+            <ul class="items">
+              <li class="fragment">Try to simulate with iptables by delaying packets</li>
+              <li class="fragment">No way to get slow unlink without bringing the entire system down</li>
+            </ul>
+          </section>
+
+      </section>
+
+      <section>
+
+          <section>
+            <h2>FUSE</h2>
+            <p>Filesystems in User Space</p>
+          </section>
+
+          <section>
+            <h3>Fwd: NetApp slow file delete simulation</h3>
+            <pre>
+From: Tim Speetjens &lt;tim.speetjens@redhat.com&gt;
+To: Nir Soffer &lt;nsoffer@redhat.com&gt;
+Date: Tue, 20 Oct 2015 10:12:18 -0400 (EDT)
+
+> I was thinking about the following setup:
+>
+> Step 1: Setup a RHEL filer which slows down deletes of
+> large files artificially
+> Based on the example FUSE filesystem in
+> http://www.cs.nmsu.edu/~pfeiffer/fuse-tutorial/
+            </pre>
+          </section>
+
+          <section>
+            <h3>FUSE Tutorial</h3>
+            <a href="https://www.cs.nmsu.edu/~pfeiffer/fuse-tutorial/src/bbfs.c">bbfs.c</a>
+            <pre>
+/*
+  Big Brother File System
+  Copyright (C) 2012 Joseph J. Pfeiffer, Jr., Ph.D. <pfeiffer@cs.nmsu.edu>
+  ...
+*/
+#include "config.h"
+#include "params.h"
+
+#include &lt;ctype.h&gt;
+#include &lt;dirent.h&gt;
+...
+#ifdef HAVE_SYS_XATTR_H
+#include &lt;sys/xattr.h&gt;
+#endif
+...
+[900 lines of C]
+            </pre>
+          </section>
+
+          <section>
+            <h3>Vote no2</h3>
+            <p>What is the best languages to write a file sytem?</p>
+            <ol class="items">
+              <li class="fragment">C</li>
+              <li class="fragment">Python</li>
+              <li class="fragment">Ansible</li>
+            </ol>
+          </section>
+
+          <section>
+            <h3>Python!</h3>
+            <ul class="items">
+              <li class="fragment">Python is faster</li>
+              <li class="fragment">First version was written in one evening</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Re: NetApp slow file delete simulation</h3>
+            <pre>
+From: Nir Soffer &lt;nsoffer@redhat.com&gt;
+To: Tim Speetjens &lt;tim.speetjens@redhat.com&gt;
+Date: Wed, 21 Oct 2015 00:16:49 +0300
+
+OK, we have now a very slow file system for testing:
+https://github.com/nirs/slowfs
+
+$ mkdir /realfs /slowfs
+$ python slowfs.py /realfs /slowfs
+
+$ touch /slowfs/test
+$ time rm /slowfs/test
+
+real 0m10.013s
+user 0m0.001s
+sys 0m0.002s
+            </pre>
+          </section>
+
+          <section>
+            <h3>slowfs v0</h3>
+            <pre>
+import os
+import sys
+import time
+import fuse
+...
+class SlowFS(fuse.Operations):
+    ...
+    def unlink(self, path):
+        time.sleep(10)
+        return os.unlink(self._full_path(path))
+    ...
+
+def main(root, mountpoint):
+    fuse.FUSE(SlowFS(root), mountpoint, foreground=True)
+
+if __name__ == '__main__':
+    main(sys.argv[1], sys.argv[2])
+            </pre>
+          </section>
+
+          <section>
+            <h3>Next morning - reproduced!</h3>
+            <pre>
+Elad 2015-10-21 10:38:10 EDT                    Comment 26
+
+We've simulated customer case using a 3.5 setup with
+vdsm-4.16.20-1.el6ev.x86_64 installed on host.
+
+I used NFS storage server with Nir's code that simulates a
+slow file system.
+...
+            </pre>
+          </section>
+
+        </section>
+
+        <section>
+
+          <section>
+            <h2>Quick tutorial</h2>
+          </section>
+
+          <section>
+            <h3>Installing</h3>
+            <p>Tested only on Fedora</p>
+            <pre>
+# dnf install fuse fuse-devel
+
+# git clone https://github.com/nirs/slowfs.git
+
+# cd slowfs
+
+# pip install -r requirements.txt
+            </pre>
+          </section>
+
+          <section>
+            <h3>Creating directories</h3>
+            <p>Files under /realfs will be exposed<br>(slowly) under /slowfs</p>
+            <pre>
+# mkdir /realfs /slowfs
+            </pre>
+          </section>
+
+          <section>
+            <h3>How slow do you want to go today?</h3>
+            <p>Create a configuration file</p>
+            <pre>
+# cat slowfs.cfg
+unlink = 60
+            </pre>
+          </section>
+
+          <section>
+            <h3>Starting the file system</h3>
+            <pre>
+# python slowfs.py -c slowfs.cfg /realfs /slowfs
+            </pre>
+          </section>
+
+          <section>
+            <h3>Testing locally</h3>
+            <pre>
+# touch /slowfs/test
+
+# time rm /slowfs/test
+
+real    1m0.063s
+user    0m0.000s
+sys     0m0.001s
+            </pre>
+          </section>
+
+          <section>
+            <h3>It works!</h3>
+            <p>How can we use this from another host?</p>
+          </section>
+
+          <section>
+            <h3>Exporting via NFS</h3>
+            <pre>
+# cat /etc/exports
+/slowfs    *(rw,sync,no_subtree_check,fsid=0)
+            </pre>
+            <p>
+              <small>Note: you must export the /slowfs directory, exporting
+              the parent dictory will not work</small>
+            </p>
+          </section>
+
+          <section>
+            <h3>Restart NFS server</h3>
+            <pre>
+# systemctl restart nfs-server
+            </pre>
+            <p><small>Maybe there is a nicer way</small></p>
+          </section>
+
+          <section>
+            <h3>Mounting on a client</h3>
+            <pre>
+# NFS 3
+# mount my.server:/slowfs mountpoint
+
+# NFS 4
+# mount -t nfs4 my.server:/ mountpoint
+            </pre>
+          </section>
+
+          <section>
+            <h3>Testing remotely</h3>
+            <pre>
+# touch mountpoint/test
+
+# time rm mountpoint/test
+
+real    1m0.063s
+user    0m0.000s
+sys     0m0.001s
+            </pre>
+          </section>
+
+          <section>
+            <h3>I want to change the configuration</h3>
+            <p class="fragment">without stopping the file
+            system!</h3>
+          </section>
+
+          <section>
+            <h3>slowfsctl</h3>
+            <pre>
+# ../slowfs/slowfsctl help
+Available comamnds:
+  disable     disable configuration
+  enable      enable configuration
+  get         get config value
+  help        show this help message
+  log         change log level
+  reload      reload configuration
+  set         set config value
+  status      show current status
+            </pre>
+            <p><small>Must run in the same directory you started the file system</small></p>
+          </section>
+
+          <section>
+            <h3>Tuning slowness</h3>
+            <pre>
+# ../slowfs/slowfsctl get unlink
+60
+
+# ../slowfs/slowfsctl set unlink 1
+
+# touch slowfs/test
+
+# time rm -f slowfs/test
+
+real	0m1.005s
+user	0m0.000s
+sys	0m0.002s
+            </pre>
+          </section>
+
+          <section>
+            <h3>My coniguration is too slow!</h3>
+            <pre>
+# ../slowfs/slowfsctl set write 1
+
+# time dd if=/dev/zero of=slowfs/test bs=4k count=10
+10+0 records in
+10+0 records out
+40960 bytes (41 kB, 40 KiB) copied, 10.0285 s, 4.1 kB/s
+
+real	0m10.036s
+user	0m0.002s
+sys	0m0.003s
+            </pre>
+          </section>
+
+          <section>
+            <h3>slowfsctl disable</h3>
+            <pre>
+# ../slowfs/slowfsctl disable
+
+# ../slowfs/slowfsctl status
+Disabled
+
+# time dd if=/dev/zero of=slowfs/test bs=4k count=10
+10+0 records in
+10+0 records out
+40960 bytes (41 kB, 40 KiB) copied, 0.00640398 s, 6.4 MB/s
+
+real	0m0.013s
+user	0m0.002s
+sys	0m0.001s
+            </pre>
+          </section>
+
+          <section>
+            <h3>slowfsctl log</h3>
+            <pre>
+[root@slowfs test]# ../slowfs/slowfsctl log debug
+[root@slowfs test]# echo "looking under the hood!" > slowfs/test 
+            </pre>
+          </section>
+
+          <section>
+            <h3>Example debug log</h3>
+            <pre>
+INFO [ctl] Setting log level to 'debug'
+DEBUG [fs] -> getattr u'/test' (None,)
+DEBUG [fs] <- getattr {'st_ctime': 1512251116.465498 ...
+DEBUG [fs] -> open u'/test' (32769,)
+DEBUG [fs] <- open 6
+DEBUG [fs] -> getxattr u'/test' (u'security.capability',)
+DEBUG [fs] <- getxattr [Errno 95] Operation not supported
+DEBUG [fs] -> truncate u'/test' (0,)
+DEBUG [fs] <- truncate None
+DEBUG [fs] -> getattr u'/test' (None,)
+DEBUG [fs] <- getattr {'st_ctime': 1512251336.2405853, ...
+DEBUG [fs] <- flush None
+DEBUG [fs] -> getxattr u'/test' (u'security.capability',)
+DEBUG [fs] <- getxattr [Errno 95] Operation not supported
+DEBUG [fs] -> write u'/test' ('looking under the hood!\n', 0, 6L)
+DEBUG [fs] <- write 24
+DEBUG [fs] -> flush u'/test' (6L,)
+DEBUG [fs] <- flush None
+DEBUG [fs] -> release u'/test' (6L,)
+DEBUG [fs] <- release None
+            </pre>
+          </section>
+
+        </section>
+
+        <section>
+          <h2>demo time</h2>
+        </section>
+
+        <section>
+
+          <section>
+            <h2>Future work</h2>
+          </section>
+
+          <section>
+            <h3>FUSE Locking</h3>
+            <ul class="items">
+              <li class="fragment">libfuse takes a lock when calling unlink</li>
+              <li class="fragment">Slowing down unlink will blocks any operation
+                in the same directory</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Tests</h3>
+            <ul class="items">
+              <li class="fragment">We have no tests</li>
+              <li class="fragment">Hard to change without
+                tests</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>How slow is python?</h3>
+            <p>libfure loopback example</p>
+            <pre>
+$ ./passthrough modules=subdir,subdir=/realfs /slowfs
+
+$ dd if=/dev/zero of=/slowfs/test bs=8M count=128
+128+0 records in
+128+0 records out
+1073741824 bytes (1.1 GB, 1.0 GiB) copied, 2.23748 s, 480 MB/s
+            </pre>
+          </section>
+
+          <section>
+            <h3>8X times slower</h3>
+            <pre>
+$ python slowfs.py /realfs /slowfs
+
+$ dd if=/dev/zero of=/slowfs/test bs=8M count=128
+128+0 records in
+128+0 records out
+1073741824 bytes (1.1 GB, 1.0 GiB) copied, 19.8493 s, 54.1 MB/s
+            </pre>
+            <p>Rewrite in C?</p>
+          </section>
+
+          <section>
+            <h3>What elese can we do?</h3>
+            <ul class="items">
+              <li>Faking errors</li>
+              <li>Corrupting data</li>
+              <li>Tracing syscalls</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>How can I contribute?</h3>
+            <p>
+              Fork slowfs on github<br>
+              <a href="https://github.com/nirs/slowfs">https://github.com/nirs/slowfs</a>
+            </p>
+            <p>
+              Fork this talk on github<br>
+              <a href="https://github.com/nirs/slowfs-qecamp-tlv-2017">https://github.com/nirs/slowfs-qecamp-tlv-2017</a>
+            </p>
+          </section>
+
+        </section>
+
+        <section>
+          <h2>Questions?</h2>
+        </section>
+
+      </div>
+
+    </div>
+
+    <script src="reveal/lib/js/head.min.js"></script>
+    <script src="reveal/js/reveal.js"></script>
+
+    <script>
+
+      // More info https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        transition: 'convex', // none/fade/slide/convex/concave/zoom
+
+        // More info https://github.com/hakimel/reveal.js#dependencies
+        dependencies: [
+          { src: 'reveal/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'reveal/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: 'reveal/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: 'reveal/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: 'reveal/plugin/zoom-js/zoom.js', async: true },
+          { src: 'reveal/plugin/notes/notes.js', async: true }
+        ]
+      });
+
+    </script>
+
+  </body>
+</html>
