@@ -336,7 +336,7 @@ sys     0m0.001s
             </pre>
             <p>
               <small>Note: you must export the /slowfs directory, exporting
-              the parent dictory will not work</small>
+              the parent directory will not work</small>
             </p>
           </section>
 
@@ -414,7 +414,7 @@ sys	0m0.002s
           </section>
 
           <section>
-            <h3>My coniguration is too slow!</h3>
+            <h3>My configuration is too slow!</h3>
             <pre>
 # ../slowfs/slowfsctl set write 1
 
@@ -498,7 +498,7 @@ DEBUG [fs] <- release None
             <h3>FUSE Locking</h3>
             <ul class="items">
               <li class="fragment">libfuse takes a lock when calling unlink</li>
-              <li class="fragment">Slowing down unlink will blocks any operation
+              <li class="fragment">Slowing down unlink will block any operation
                 in the same directory</li>
             </ul>
           </section>
@@ -539,7 +539,7 @@ $ dd if=/dev/zero of=/slowfs/test bs=8M count=128
           </section>
 
           <section>
-            <h3>What elese can we do?</h3>
+            <h3>What else can we do?</h3>
             <ul class="items">
               <li>Faking errors</li>
               <li>Corrupting data</li>
